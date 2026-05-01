@@ -2,7 +2,7 @@
 
 |-> zero-SHITAPI internal hook and packet manipulator for quake 3, written entirely in pure c# (no pure winapi, why the fuck would you even brag about that v952? dambass) 
 
-|-> raw x64 assembly trampoline jumpist and network packet manipulation without any cpp or external memory wrappers
+|-> raw x64 assembly trampoline jumpist and network packet manipulation without any cpp or external memory wrappers  
 |-> utilizes stack allocations and intermediate language level unsafe memblocks -> no heap alloc, no gc fuckage
 
 ## Features
@@ -23,12 +23,12 @@
 ### IMPORTANT: Injectors
 |-> this is a c# dll utilizing `[UnmanagedCallersOnly]`, the injector needs to know what to execute first
 
-|-> all of my testing was done with Xenos, which requires the following steps:
-|	1. add the native dll
-|	2. go to advanced
-|	3. set init routine to: `Attach`
+|-> all of my testing was done with Xenos, which requires the following steps:  
+|	1. add the native dll  
+|	2. go to advanced  
+|	3. set init routine to: `Attach`  
 
-|-> i assume most other injectors would work similarly
+|-> i assume most other injectors would work similarly  
 
 ## Structure
 
@@ -39,7 +39,7 @@
 * `_OFFSETS.cs` - global static class of engine pointers, func limiting, and game state consts
 
 ## Nutshell
-|-> this repository should be a resource for game engine architecture, memory alignment, and x64 assembly hooking via c# (with STILL no asm blocks in 2026)
-|-> and yes there is a syscall and a single console alloc for debug purposes fuck you if you think thats 'using winapi for this project'. just get rid of the window if you hate it. bitch.
+|-> this repository should be a resource for game engine architecture, memory alignment, and x64 assembly hooking via c# (with STILL no asm blocks in 2026)  
+|-> and yes there is a syscall and a single console alloc for debug purposes fuck you if you think thats 'using winapi for this project'. just get rid of the window if you hate it. bitch.  
 
 ---
