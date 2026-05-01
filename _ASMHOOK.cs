@@ -9,20 +9,28 @@ namespace HolyHook
 	{
 	public class _ASMHOOK
 		{
-		[DllImport("kernel32.dll",SetLastError = true)]
-		private static extern IntPtr VirtualAlloc(IntPtr lpAddress,uint dwSize,uint flAllocationType,uint flProtect);
-
-		[DllImport("kernel32.dll",SetLastError = true)]
-		private static extern bool VirtualProtect(IntPtr lpAddress,UIntPtr dwSize,uint flNewProtect,out uint lpflOldProtect);
+		//no more tables and no more pinvokes
+		private unsafe delegate* unmanaged[Stdcall]<IntPtr, uint,uint,uint, IntPtr> _VirtualAlloc;
+		private unsafe delegate* unmanaged[Stdcall]<IntPtr, UIntPtr, uint, uint*, bool> _VirtualProtect;
 		private const uint MEM_COMMIT = 0x1000;
 		private const uint MEM_RESERVE = 0x2000;
 		private const uint PAGE_EXECUTE_READWRITE = 0x40;
 
 		private const int JMP_SIZE = 12;
 
+		public unsafe _ASMHOOK()
+		{
+			IntPtr kernel32 = NativeLibrary.Load("kernel32.dll");
+			IntPtr v_alloc_ptr = NativeLibrary.GetExport(kernel32, "VirtualAlloc");
+			IntPtr v_protect_ptr = NativeLibrary.GetExport(kernel32, "VirtualProtect");
+
+			_VirtualAlloc = (delegate* unmanaged[Stdcall]<IntPtr, uint,uint,uint, IntPtr>)v_alloc_ptr;
+			_VirtualProtect = (delegate* unmanaged[Stdcall]<IntPtr, UIntPtr, uint, uint*, bool>)v_protect_ptr;
+		}
+
 		public unsafe IntPtr Install(IntPtr target_address, IntPtr hook_func_address, int bytes_2_steal){
 			//well make the game jmp back in order to ensure some stability? perhaps? -> update: yes it works
-			IntPtr trampoline_address = VirtualAlloc(IntPtr.Zero,(uint)(bytes_2_steal + JMP_SIZE),MEM_COMMIT | MEM_RESERVE,PAGE_EXECUTE_READWRITE);
+			IntPtr trampoline_address = _VirtualAlloc(IntPtr.Zero,(uint)(bytes_2_steal + JMP_SIZE),MEM_COMMIT | MEM_RESERVE,PAGE_EXECUTE_READWRITE);
 			//steal the original instructions from the engine and insert into our trampoline afterwards
 			byte* target_ptr = (byte*)target_address;
 			byte* trampoline_ptr = (byte*)trampoline_address;
@@ -55,9 +63,10 @@ namespace HolyHook
 			Unsafe.CopyBlockUnaligned(p, hook_jmp,JMP_SIZE);
 
 			//finally, hook into engine
-			VirtualProtect(target_address,(UIntPtr)bytes_2_steal, PAGE_EXECUTE_READWRITE, out uint old);
+			uint old;
+			_VirtualProtect(target_address,(UIntPtr)bytes_2_steal, PAGE_EXECUTE_READWRITE, &old);
 			Unsafe.CopyBlockUnaligned(target_ptr,p,(uint)bytes_2_steal);
-			VirtualProtect(target_address, (UIntPtr)bytes_2_steal, old, out _);
+			_VirtualProtect(target_address, (UIntPtr)bytes_2_steal, old, &old);
 
 			return trampoline_address;
 			}
